@@ -1,0 +1,193 @@
+---
+title: "R Notebook"
+author: "Swayamshree Mohanty"
+output: "html_document"
+---
+# DATA EXTRACTION
+```{r}
+library(readr)
+# Loading the Dataset
+data <- read_csv('IPL Matches Dataset 2021.csv')
+
+# Attaching the Dataset
+attach(data)
+```
+# DATA CLEANING & PRE-PROCESSING
+```{r}
+# Cleaning and Processing the data
+library(tidyverse)
+library(psych)
+
+# Checking for missing values in the entire dataframe
+any(is.na(data))
+
+# Checking for the total number of missing values in the entire dataframe
+sum(is.na(data))
+
+library(Amelia)
+missmap(data,main="Missing data",col=c("red","pink"),legend = FALSE)
+colSums(is.na(data))
+
+# Dropping unnecessary columns
+data = select(data ,-c(id, date, method, eliminator, umpire1, umpire2, neutral_venue))
+```
+
+```{r}
+# Viewing the cleaned Dataset
+view(data)
+
+# Statistical Summary of the Dataset
+library(skimr)
+skim(data)
+```
+# DATA VISUALIZATION
+```{r}
+# Q1. Who won the player of the match title most of the times ?
+data%>% 
+  filter(result != 'no result') %>% group_by(player_of_match) %>% 
+  summarise(win = n()) %>% arrange(desc(win))
+```
+# As observed from the table, Shikar Dhawan has won player of the match title most of the times.
+
+```{r}
+library(ggplot2)
+library(plotly)
+
+# Barplot displaying player of the match 
+valuable_player = data %>% group_by(player_of_match) %>% summarise(win = n())
+BP_valuable_player = ggplot(valuable_player) + geom_bar(aes(win,player_of_match, fill = player_of_match), stat = 'identity') + coord_flip()
+ggplotly(BP_valuable_player)
+```
+
+```{r}
+# Q2. Which IPL Teams are more successful?
+data %>% group_by(winner) %>% summarise(winner_cnt = n()) %>%
+  filter(winner_cnt == max(winner_cnt))
+```
+
+```{r}
+# Barplot displaying the number of matches won by each team  
+success_team = data %>% group_by(winner) %>% summarise(winner_cnt = n())
+BP_success_team = ggplot(success_team) + geom_bar(aes(winner, winner_cnt, fill = winner), stat = 'identity') + coord_flip()
+ggplotly(BP_success_team)
+```
+
+```{r}
+# Q3. Most matches were played in which cities ?
+data %>% group_by(city) %>% summarise(city_cnt = n()) %>%
+  filter(city_cnt == max(city_cnt))
+```
+
+
+```{r}
+# Barplot displaying the the number of matches that were played at the 3 cities 
+city_matches = data %>% group_by(city) %>% summarise(city_cnt = n())
+BP_city_matches = ggplot(city_matches) + geom_bar(aes(city, city_cnt, fill = city), stat = 'identity') + coord_flip()
+ggplotly(BP_city_matches)
+```
+
+```{r}
+# Q4. Most matches were played in which venue ?
+data %>% group_by(venue) %>% summarise(venue_cnt = n()) %>%
+  filter(venue_cnt == max(venue_cnt))
+```
+
+```{r}
+# Barplot displaying the the number of matches that were played at the 3 venues
+venues_matches = data %>% group_by(venue) %>% summarise(venue_cnt = n())
+BP_venues_matches = ggplot(venues_matches) + geom_bar(aes(venue, venue_cnt, fill = venue), stat = 'identity') + coord_flip()
+ggplotly(BP_venues_matches)
+```
+
+
+```{r}
+# Q5. By how much result margin the teams have won the matches ?
+ggplot(data, aes(result_margin, winner, fill = result)) +     
+  geom_bar(stat = "identity")
+```
+
+```{r}
+# Q6. Has Toss-winning helped in winning matches?
+y=0
+n=0
+  for(i in seq(1,nrow(data)))
+  {
+      if (data$toss_winner[i] == data$winner[i])
+    y=y+1
+    else 
+    n=n+1
+  }
+
+if (y >= n)
+{
+print(paste("Yes, Toss-winning helped in winning matches."))
+  print(paste("Matches won by toss_winner are: ", y, "& Total matches played are : ", nrow(data)))
+} else
+  
+{
+ print(paste("No, Toss-winning didn't help in winning matches."))
+  print(paste("Matches won by other teams are :", n, "& Total matches played are :", nrow(data))) 
+}
+```
+
+
+```{r}
+# Q6. How many times has toss winning helped in winning matches ?
+table(data$winner == data$toss_winner)
+```
+
+```{r}
+# Q7. Which toss decision was better ?
+decision_success = data %>% group_by(toss_decision) %>% summarise(toss_decision_cnt = n())
+BP_decision_success = ggplot(decision_success) + geom_bar(aes(toss_decision, toss_decision, fill = toss_decision), stat = 'identity') + coord_flip()
+ggplotly(BP_decision_success)
+
+# As observed from the graph, the decision to field first was better.
+```
+
+
+
+
+```{r}
+# Barplot for analyzing if Toss-winning helped in winning matches.
+winning_cnt = c(y,n)
+teams = c("toss_won_&_match_won" , "toss_won_&_match_lost ")
+data = data.frame(teams,winning_cnt, stringsAsFactors = F)
+toss_sts = ggplot(data) + geom_bar(aes(teams,winning_cnt, fill = teams), 
+                    stat = 'identity')
+ggplotly(toss_sts)
+```
+
+```{r}
+library(funModeling) 
+library(Hmisc)
+library(tidyverse)
+basic_eda <- function(data)
+{
+  glimpse(data)
+  print(status(data))
+  freq(data) 
+  print(profiling_num(data))
+  plot_num(data)
+  describe(data)
+  status(data)
+}
+
+basic_eda(data)
+```
+
+# DATA PROFILLING REPORT
+```{r}
+library(DataExplorer)
+library(tidyverse)
+data <- read_csv("IPL Matches Dataset 2021.csv")
+view(data)
+DataExplorer::create_report(data)
+```
+
+
+
+
+
+
+
